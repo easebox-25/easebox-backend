@@ -27,6 +27,18 @@ export interface AuthTokens {
   refreshToken: string;
 }
 
+export interface OAuthAuthInput {
+  email: string;
+  emailVerified: boolean;
+  firstName: string;
+  lastName: string;
+  provider: OAuthProviderType;
+  providerAccountId: string;
+}
+
+// OAuth types
+export type OAuthProviderType = "apple" | "google";
+
 export interface RegisterIndividualInput {
   email: string;
   firstName: string;

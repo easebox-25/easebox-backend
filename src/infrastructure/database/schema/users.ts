@@ -5,6 +5,7 @@ import {
   pgTable,
   text,
   timestamp,
+  unique,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -24,7 +25,7 @@ export const users = pgTable("users", {
   emailVerified: boolean("email_verified").notNull().default(false),
   id: uuid("id").primaryKey().defaultRandom(),
   isActive: boolean("is_active").notNull().default(true),
-  password: text("password").notNull(),
+  password: text("password"), // Nullable for OAuth-only users
   phoneVerified: boolean("phone_verified").notNull().default(false),
   termsAccepted: boolean("terms_accepted").notNull().default(false),
   updatedAt: timestamp("updated_at", { withTimezone: true })
@@ -83,12 +84,45 @@ export const otps = pgTable("otps", {
     .references(() => users.id, { onDelete: "cascade" }),
 });
 
+// OAuth Identities - for social login providers
+export const oauthIdentities = pgTable(
+  "oauth_identities",
+  {
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    id: uuid("id").primaryKey().defaultRandom(),
+    provider: text("provider").notNull(), // e.g., 'google', 'apple'
+    providerAccountId: text("provider_account_id").notNull(), // ID from the OAuth provider
+    providerEmail: text("provider_email"), // Email from the provider (can differ from user email)
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+  },
+  (table) => [
+    // A user can only have one identity per provider
+    unique("oauth_identities_user_provider_unique").on(
+      table.userId,
+      table.provider
+    ),
+    // Provider account ID must be unique per provider
+    unique("oauth_identities_provider_account_unique").on(
+      table.provider,
+      table.providerAccountId
+    ),
+  ]
+);
+
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
   individualProfile: one(individualProfiles, {
     fields: [users.id],
     references: [individualProfiles.userId],
   }),
+  oauthIdentities: many(oauthIdentities),
   otps: many(otps),
   riderProfile: one(riderProfiles, {
     fields: [users.id],
@@ -120,12 +154,24 @@ export const otpsRelations = relations(otps, ({ one }) => ({
   }),
 }));
 
+export const oauthIdentitiesRelations = relations(
+  oauthIdentities,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [oauthIdentities.userId],
+      references: [users.id],
+    }),
+  })
+);
+
 // Types
 export type IndividualProfile = typeof individualProfiles.$inferSelect;
 export type NewIndividualProfile = typeof individualProfiles.$inferInsert;
+export type NewOAuthIdentity = typeof oauthIdentities.$inferInsert;
 export type NewOtp = typeof otps.$inferInsert;
 export type NewRiderProfile = typeof riderProfiles.$inferInsert;
 export type NewUser = typeof users.$inferInsert;
+export type OAuthIdentity = typeof oauthIdentities.$inferSelect;
 export type Otp = typeof otps.$inferSelect;
 export type OtpType = "email" | "phone";
 export type RiderProfile = typeof riderProfiles.$inferSelect;
