@@ -1,5 +1,18 @@
 import { z } from "zod";
 
+export const loginSchema = z.object({
+  email: z
+    .email("Please provide a valid email address")
+    .max(255, "Email must not exceed 255 characters")
+    .transform((val) => val.toLowerCase().trim()),
+
+  password: z
+    .string({ error: "Password is required" })
+    .min(1, "Password is required"),
+});
+
+export type LoginDto = z.infer<typeof loginSchema>;
+
 export const registerIndividualSchema = z.object({
   email: z
     .email("Please provide a valid email address")

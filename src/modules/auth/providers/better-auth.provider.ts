@@ -63,21 +63,15 @@ export const auth = betterAuth({
   baseURL: process.env.BASE_URL ?? "http://localhost:3000",
   database: drizzleAdapter(db, {
     provider: "pg",
-    // Map Better Auth's expected schema to our custom tables
     schema: {
       user: users,
-      // We handle accounts ourselves via oauthIdentities
     },
   }),
   databaseHooks: {
     user: {
       create: {
-        // After Better Auth creates a user, we create the individual profile
         after: async (user) => {
-          // Parse name from Better Auth user (comes from OAuth provider)
           const { firstName, lastName } = parseName(user.name ?? "");
-
-          // Create individual profile for the new user
           await db.insert(individualProfiles).values({
             firstName,
             lastName,
@@ -85,14 +79,14 @@ export const auth = betterAuth({
             userId: user.id,
           });
         },
-        // Before creating user, set our custom fields
+
         before: async (user) => {
           return {
             data: {
               ...user,
               emailVerified: user.emailVerified ?? false,
               isActive: true,
-              password: null, // OAuth users don't have passwords
+              password: null,
               phoneVerified: false,
               termsAccepted: true,
               userType: "individual",
@@ -115,7 +109,7 @@ export const auth = betterAuth({
       },
     },
   },
-  // Custom callback handler to issue our JWT tokens
+
   callbacks: {
     async session({
       session,
@@ -124,7 +118,6 @@ export const auth = betterAuth({
       session: Record<string, unknown>;
       user: Record<string, unknown>;
     }) {
-      // Attach our custom data to the session
       return {
         ...session,
         user: {
@@ -143,7 +136,6 @@ export const auth = betterAuth({
 export async function handleOAuthComplete(
   userId: string
 ): Promise<OAuthCallbackResult> {
-  // Fetch user and profile
   const [user] = await db.select().from(users).where(eq(users.id, userId));
 
   if (!user) {
@@ -159,7 +151,6 @@ export async function handleOAuthComplete(
     throw new Error("Profile not found after OAuth");
   }
 
-  // Generate our JWT tokens
   const tokens = generateTokens({
     email: user.email,
     userId: user.id,
@@ -167,7 +158,7 @@ export async function handleOAuthComplete(
   });
 
   return {
-    isNewUser: false, // We'll determine this based on context
+    isNewUser: false,
     profile: {
       firstName: profile.firstName,
       id: profile.id,

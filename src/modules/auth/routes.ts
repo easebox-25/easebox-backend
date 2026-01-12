@@ -49,7 +49,8 @@ const authController = new AuthController(authService);
 const verificationController = new VerificationController(verificationService);
 const oauthController = new OAuthController(oauthAuthService);
 
-router.post("/register/individual", authController.registerIndividual);
+router.post("/individual/register", authController.registerIndividual);
+router.post("/individual/login", authController.login);
 
 router.post(
   "/verification/request",
@@ -61,11 +62,8 @@ router.all("/oauth/*splat", (req, res) => {
   return toNodeHandler(auth)(req, res);
 });
 
-// Post-OAuth endpoint to get JWT tokens after Better Auth callback
 router.post("/oauth/:provider/token", oauthController.issueTokens);
-
 router.get("/oauth/providers", oauthController.getLinkedProviders);
-
 router.delete("/oauth/:provider/unlink", oauthController.unlinkProvider);
 
 export default router;

@@ -3,11 +3,12 @@ import type { IndividualProfileRepository } from "#repositories/individual-profi
 import type { UserRepository } from "#repositories/user.repository.js";
 import type {
   AuthResponse,
+  LoginInput,
   RegisterIndividualInput,
 } from "#shared/types/index.js";
 
 import { generateTokens } from "#shared/utils/jwt.js";
-import { hashPassword } from "#shared/utils/password.js";
+import { hashPassword, verifyPassword } from "#shared/utils/password.js";
 
 import type { VerificationService } from "./verification.service.js";
 
@@ -31,7 +32,6 @@ export class AuthService {
   async registerIndividual(
     input: RegisterIndividualInput
   ): Promise<AuthResponse> {
-    // Check if user already exists
     const existingUser = await this.userRepository.existsByEmail(input.email);
     if (existingUser) {
       throw new AuthError(
@@ -40,7 +40,6 @@ export class AuthService {
       );
     }
 
-    // Validate terms acceptance
     if (!input.termsAccepted) {
       throw new AuthError(
         "You must accept the terms and conditions",
@@ -48,10 +47,8 @@ export class AuthService {
       );
     }
 
-    // Hash password
     const hashedPassword = await hashPassword(input.password);
 
-    // Create user
     const user = await this.userRepository.create({
       email: input.email.toLowerCase().trim(),
       password: hashedPassword,
@@ -59,7 +56,6 @@ export class AuthService {
       userType: "individual",
     });
 
-    // Create individual profile
     const profile = await this.individualProfileRepository.create({
       firstName: input.firstName.trim(),
       lastName: input.lastName.trim(),
@@ -72,10 +68,56 @@ export class AuthService {
       await this.verificationService.sendEmailVerification(user.id);
     } catch (error) {
       console.error("Failed to send verification email:", error);
-      // Continue with registration even if email fails
     }
 
-    // Generate tokens
+    const tokens = generateTokens({
+      email: user.email,
+      userId: user.id,
+      userType: user.userType,
+    });
+
+    return {
+      profile,
+      tokens,
+      user_id: user.id,
+    };
+  }
+
+  async login(input: LoginInput): Promise<AuthResponse> {
+    const email = input.email.toLowerCase().trim();
+
+    const user = await this.userRepository.findByEmail(email);
+    if (!user) {
+      throw new AuthError("Invalid email or password", "INVALID_CREDENTIALS");
+    }
+
+    // Check if user has a password (might be OAuth-only user)
+    if (!user.password) {
+      throw new AuthError(
+        "This account uses social login. Please sign in with your social provider.",
+        "NO_PASSWORD"
+      );
+    }
+
+    const isPasswordValid = await verifyPassword(input.password, user.password);
+    if (!isPasswordValid) {
+      throw new AuthError("Invalid email or password", "INVALID_CREDENTIALS");
+    }
+
+    if (!user.isActive) {
+      throw new AuthError(
+        "Your account has been deactivated. Please contact support.",
+        "ACCOUNT_DEACTIVATED"
+      );
+    }
+
+    const profile = await this.individualProfileRepository.findByUserId(
+      user.id
+    );
+    if (!profile) {
+      throw new AuthError("User profile not found", "PROFILE_NOT_FOUND");
+    }
+
     const tokens = generateTokens({
       email: user.email,
       userId: user.id,

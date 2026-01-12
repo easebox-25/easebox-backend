@@ -39,6 +39,11 @@ export interface OAuthAuthInput {
 // OAuth types
 export type OAuthProviderType = "apple" | "google";
 
+export interface LoginInput {
+  email: string;
+  password: string;
+}
+
 export interface RegisterIndividualInput {
   email: string;
   firstName: string;
