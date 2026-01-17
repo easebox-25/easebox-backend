@@ -1,4 +1,5 @@
 import type {
+  CompanyProfile,
   IndividualProfile,
   OtpType,
 } from "#infrastructure/database/schema/users.js";
@@ -11,7 +12,7 @@ export interface ApiResponse<T = unknown> {
 }
 
 export interface AuthResponse {
-  profile: IndividualProfile;
+  profile: CompanyProfile | IndividualProfile;
   tokens: AuthTokens;
   user_id: string;
 }
@@ -42,6 +43,17 @@ export type OAuthProviderType = "apple" | "google";
 export interface LoginInput {
   email: string;
   password: string;
+}
+
+export interface RegisterCompanyInput {
+  address: string;
+  companyEmail: string;
+  companyName: string;
+  companyPhone?: string;
+  logoUrl?: string;
+  password: string;
+  rcNumber: string;
+  termsAccepted: boolean;
 }
 
 export interface RegisterIndividualInput {

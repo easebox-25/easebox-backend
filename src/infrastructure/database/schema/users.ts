@@ -70,6 +70,26 @@ export const riderProfiles = pgTable("rider_profiles", {
     .references(() => users.id, { onDelete: "cascade" }),
 });
 
+export const companyProfiles = pgTable("company_profiles", {
+  address: text("address").notNull(),
+  companyEmail: text("company_email").notNull(),
+  companyName: text("company_name").notNull(),
+  companyPhone: text("company_phone"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  id: uuid("id").primaryKey().defaultRandom(),
+  logoUrl: text("logo_url"),
+  rcNumber: text("rc_number").notNull().unique(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  userId: uuid("user_id")
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: "cascade" }),
+});
+
 // OTP table for verification
 export const otps = pgTable("otps", {
   code: text("code").notNull(),
@@ -118,6 +138,10 @@ export const oauthIdentities = pgTable(
 
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
+  companyProfile: one(companyProfiles, {
+    fields: [users.id],
+    references: [companyProfiles.userId],
+  }),
   individualProfile: one(individualProfiles, {
     fields: [users.id],
     references: [individualProfiles.userId],
@@ -147,6 +171,16 @@ export const riderProfilesRelations = relations(riderProfiles, ({ one }) => ({
   }),
 }));
 
+export const companyProfilesRelations = relations(
+  companyProfiles,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [companyProfiles.userId],
+      references: [users.id],
+    }),
+  })
+);
+
 export const otpsRelations = relations(otps, ({ one }) => ({
   user: one(users, {
     fields: [otps.userId],
@@ -165,7 +199,9 @@ export const oauthIdentitiesRelations = relations(
 );
 
 // Types
+export type CompanyProfile = typeof companyProfiles.$inferSelect;
 export type IndividualProfile = typeof individualProfiles.$inferSelect;
+export type NewCompanyProfile = typeof companyProfiles.$inferInsert;
 export type NewIndividualProfile = typeof individualProfiles.$inferInsert;
 export type NewOAuthIdentity = typeof oauthIdentities.$inferInsert;
 export type NewOtp = typeof otps.$inferInsert;

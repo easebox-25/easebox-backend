@@ -1,9 +1,11 @@
 import type { User } from "#infrastructure/database/schema/users.js";
+import type { CompanyProfileRepository } from "#repositories/company-profile.repository.js";
 import type { IndividualProfileRepository } from "#repositories/individual-profile.repository.js";
 import type { UserRepository } from "#repositories/user.repository.js";
 import type {
   AuthResponse,
   LoginInput,
+  RegisterCompanyInput,
   RegisterIndividualInput,
 } from "#shared/types/index.js";
 
@@ -26,6 +28,7 @@ export class AuthService {
   constructor(
     private userRepository: UserRepository,
     private individualProfileRepository: IndividualProfileRepository,
+    private companyProfileRepository: CompanyProfileRepository,
     private verificationService: VerificationService
   ) {}
 
@@ -60,6 +63,77 @@ export class AuthService {
       firstName: input.firstName.trim(),
       lastName: input.lastName.trim(),
       phone: input.phone?.trim() ?? null,
+      userId: user.id,
+    });
+
+    // Send verification email (don't block registration on failure)
+    try {
+      await this.verificationService.sendEmailVerification(user.id);
+    } catch (error) {
+      console.error("Failed to send verification email:", error);
+    }
+
+    const tokens = generateTokens({
+      email: user.email,
+      userId: user.id,
+      userType: user.userType,
+    });
+
+    return {
+      profile,
+      tokens,
+      user_id: user.id,
+    };
+  }
+
+  async registerCompany(input: RegisterCompanyInput): Promise<AuthResponse> {
+    // Check if email already exists
+    const existingUser = await this.userRepository.existsByEmail(
+      input.companyEmail
+    );
+    if (existingUser) {
+      throw new AuthError(
+        "A user with this email already exists",
+        "EMAIL_EXISTS"
+      );
+    }
+
+    // Check if RC number already exists
+    const existingCompany = await this.companyProfileRepository.findByRcNumber(
+      input.rcNumber
+    );
+    if (existingCompany) {
+      throw new AuthError(
+        "A company with this RC number already exists",
+        "RC_NUMBER_EXISTS"
+      );
+    }
+
+    if (!input.termsAccepted) {
+      throw new AuthError(
+        "You must accept the terms and conditions",
+        "TERMS_NOT_ACCEPTED"
+      );
+    }
+
+    const hashedPassword = await hashPassword(input.password);
+
+    // Create user account
+    const user = await this.userRepository.create({
+      email: input.companyEmail.toLowerCase().trim(),
+      password: hashedPassword,
+      termsAccepted: true,
+      userType: "logistics_company",
+    });
+
+    // Create company profile
+    const profile = await this.companyProfileRepository.create({
+      address: input.address.trim(),
+      companyEmail: input.companyEmail.toLowerCase().trim(),
+      companyName: input.companyName.trim(),
+      companyPhone: input.companyPhone?.trim() ?? null,
+      logoUrl: input.logoUrl ?? null,
+      rcNumber: input.rcNumber.trim(),
       userId: user.id,
     });
 
