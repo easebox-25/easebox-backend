@@ -1,10 +1,12 @@
 import { db } from "#infrastructure/database/index.js";
 import {
+  CompanyProfileRepository,
   IndividualProfileRepository,
   OAuthIdentityRepository,
   OtpRepository,
   UserRepository,
 } from "#repositories/index.js";
+import { uploadLogo } from "#shared/middleware/index.js";
 import { toNodeHandler } from "better-auth/node";
 import { Router } from "express";
 
@@ -25,6 +27,7 @@ const router = Router();
 // Initialize repositories
 const userRepository = new UserRepository(db);
 const individualProfileRepository = new IndividualProfileRepository(db);
+const companyProfileRepository = new CompanyProfileRepository(db);
 const otpRepository = new OtpRepository(db);
 const oauthIdentityRepository = new OAuthIdentityRepository(db);
 
@@ -36,6 +39,7 @@ const verificationService = new VerificationService(
 const authService = new AuthService(
   userRepository,
   individualProfileRepository,
+  companyProfileRepository,
   verificationService
 );
 const oauthAuthService = new OAuthAuthService(
@@ -51,6 +55,12 @@ const oauthController = new OAuthController(oauthAuthService);
 
 router.post("/individual/register", authController.registerIndividual);
 router.post("/individual/login", authController.login);
+
+router.post(
+  "/company/register",
+  uploadLogo.single("logo"),
+  authController.registerCompany
+);
 
 router.post(
   "/verification/request",

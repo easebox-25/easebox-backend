@@ -10,6 +10,9 @@ const port = process.env.PORT ?? "3000";
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve static files (uploads)
+app.use("/uploads", express.static("uploads"));
+
 // Health check
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
