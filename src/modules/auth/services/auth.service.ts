@@ -87,25 +87,14 @@ export class AuthService {
   }
 
   async registerCompany(input: RegisterCompanyInput): Promise<AuthResponse> {
-    // Check if email already exists
+    
     const existingUser = await this.userRepository.existsByEmail(
       input.companyEmail
     );
     if (existingUser) {
       throw new AuthError(
-        "A user with this email already exists",
+        "A company with this email already exists",
         "EMAIL_EXISTS"
-      );
-    }
-
-    // Check if RC number already exists
-    const existingCompany = await this.companyProfileRepository.findByRcNumber(
-      input.rcNumber
-    );
-    if (existingCompany) {
-      throw new AuthError(
-        "A company with this RC number already exists",
-        "RC_NUMBER_EXISTS"
       );
     }
 
@@ -118,7 +107,7 @@ export class AuthService {
 
     const hashedPassword = await hashPassword(input.password);
 
-    // Create user account
+    
     const user = await this.userRepository.create({
       email: input.companyEmail.toLowerCase().trim(),
       password: hashedPassword,
@@ -126,14 +115,13 @@ export class AuthService {
       userType: "logistics_company",
     });
 
-    // Create company profile
     const profile = await this.companyProfileRepository.create({
       address: input.address.trim(),
       companyEmail: input.companyEmail.toLowerCase().trim(),
       companyName: input.companyName.trim(),
       companyPhone: input.companyPhone?.trim() ?? null,
       logoUrl: input.logoUrl ?? null,
-      rcNumber: input.rcNumber.trim(),
+      rcNumber: null,
       userId: user.id,
     });
 
@@ -165,7 +153,6 @@ export class AuthService {
       throw new AuthError("Invalid email or password", "INVALID_CREDENTIALS");
     }
 
-    // Check if user has a password (might be OAuth-only user)
     if (!user.password) {
       throw new AuthError(
         "This account uses social login. Please sign in with your social provider.",

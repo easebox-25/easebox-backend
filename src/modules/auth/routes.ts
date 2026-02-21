@@ -12,15 +12,19 @@ import { Router } from "express";
 
 import {
   AuthController,
+  createIdVerificationController,
   OAuthController,
   VerificationController,
 } from "./controllers/index.js";
+import { DummyVerificationProvider } from "./providers/dummy-verification.provider.js";
 import { auth } from "./providers/better-auth.provider.js";
 import {
   AuthService,
+  IdVerificationService,
   OAuthAuthService,
   VerificationService,
 } from "./services/index.js";
+import { PremblyVerificationProvider } from "./providers/prembly.provider.js";
 
 const router = Router();
 
@@ -48,10 +52,21 @@ const oauthAuthService = new OAuthAuthService(
   individualProfileRepository
 );
 
+// Initialize ID verification provider and service
+const premblyVerificationProvider = new PremblyVerificationProvider();
+const idVerificationService = new IdVerificationService(
+  premblyVerificationProvider,
+  userRepository,
+  companyProfileRepository
+);
+
 // Initialize controllers
 const authController = new AuthController(authService);
 const verificationController = new VerificationController(verificationService);
 const oauthController = new OAuthController(oauthAuthService);
+const idVerificationController = createIdVerificationController(
+  idVerificationService
+);
 
 router.post("/individual/register", authController.registerIndividual);
 router.post("/individual/login", authController.login);
@@ -67,6 +82,8 @@ router.post(
   verificationController.requestVerification
 );
 router.post("/verification/verify", verificationController.verifyAccount);
+
+router.post("/id-verification/verify", ...idVerificationController);
 
 router.all("/oauth/*splat", (req, res) => {
   return toNodeHandler(auth)(req, res);
