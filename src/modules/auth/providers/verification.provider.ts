@@ -1,5 +1,3 @@
-import { IDType } from "#shared/types/index.js";
-
 export interface VerificationResult {
   isValid: boolean;
   data?: Record<string, unknown>;
@@ -7,7 +5,8 @@ export interface VerificationResult {
 }
 
 export interface VerificationProvider {
-  verify(idNumber: string, idType: IDType): Promise<Record<string, unknown>>;
+  verifyNIN(idNumber: string): Promise<Record<string, unknown>>;
+  verifyRCNumber(rcNumber: string): Promise<Record<string, unknown>>;
   transform(data: Record<string, unknown>): VerificationResult;
 }
 

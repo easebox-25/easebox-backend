@@ -6,7 +6,7 @@ export const idVerificationSchema = z.object({
     .min(1, "ID number is required")
     .transform((val) => val.trim()),
     
-  id_type: z.enum(["RC_NUM", "NIN"], { error: "Invalid ID type" }
+  id_type: z.enum(["rc_number", "nigerian_national_id"], { error: "Invalid ID type" }
   ),
 });
 
