@@ -61,6 +61,8 @@ export const riderProfiles = pgTable("rider_profiles", {
   firstName: text("first_name").notNull(),
   id: uuid("id").primaryKey().defaultRandom(),
   lastName: text("last_name").notNull(),
+  middleName: text("middle_name"),
+  address: text("address").notNull(),
   phone: text("phone"),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
@@ -69,7 +71,7 @@ export const riderProfiles = pgTable("rider_profiles", {
     .notNull()
     .unique()
     .references(() => users.id, { onDelete: "cascade" }),
-  idNumber: text("id_number").notNull().unique(),
+  idNumber: text("id_number").unique(),
 });
 
 export const companyProfiles = pgTable("company_profiles", {

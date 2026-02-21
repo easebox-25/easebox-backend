@@ -1,6 +1,7 @@
 import type { User } from "#infrastructure/database/schema/users.js";
 import type { CompanyProfileRepository } from "#repositories/company-profile.repository.js";
 import type { IndividualProfileRepository } from "#repositories/individual-profile.repository.js";
+import type { RiderProfileRepository } from "#repositories/rider-profile.repository.js";
 import type { UserRepository } from "#repositories/user.repository.js";
 import type {
   AuthResponse,
@@ -29,6 +30,7 @@ export class AuthService {
     private userRepository: UserRepository,
     private individualProfileRepository: IndividualProfileRepository,
     private companyProfileRepository: CompanyProfileRepository,
+    private riderProfileRepository: RiderProfileRepository,
     private verificationService: VerificationService
   ) {}
 
@@ -172,9 +174,16 @@ export class AuthService {
       );
     }
 
-    const profile = await this.individualProfileRepository.findByUserId(
-      user.id
-    );
+    // Fetch the appropriate profile based on user type
+    let profile;
+    if (user.userType === "individual") {
+      profile = await this.individualProfileRepository.findByUserId(user.id);
+    } else if (user.userType === "logistics_company") {
+      profile = await this.companyProfileRepository.findByUserId(user.id);
+    } else if (user.userType === "rider") {
+      profile = await this.riderProfileRepository.findByUserId(user.id);
+    }
+
     if (!profile) {
       throw new AuthError("User profile not found", "PROFILE_NOT_FOUND");
     }

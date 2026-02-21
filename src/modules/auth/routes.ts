@@ -4,6 +4,7 @@ import {
   IndividualProfileRepository,
   OAuthIdentityRepository,
   OtpRepository,
+  RiderProfileRepository,
   UserRepository,
 } from "#repositories/index.js";
 import { uploadLogo } from "#shared/middleware/index.js";
@@ -16,7 +17,7 @@ import {
   OAuthController,
   VerificationController,
 } from "./controllers/index.js";
-import { DummyVerificationProvider } from "./providers/dummy-verification.provider.js";
+// import { DummyVerificationProvider } from "./providers/dummy-verification.provider.js";
 import { auth } from "./providers/better-auth.provider.js";
 import {
   AuthService,
@@ -32,6 +33,7 @@ const router = Router();
 const userRepository = new UserRepository(db);
 const individualProfileRepository = new IndividualProfileRepository(db);
 const companyProfileRepository = new CompanyProfileRepository(db);
+const riderProfileRepository = new RiderProfileRepository(db);
 const otpRepository = new OtpRepository(db);
 const oauthIdentityRepository = new OAuthIdentityRepository(db);
 
@@ -44,6 +46,7 @@ const authService = new AuthService(
   userRepository,
   individualProfileRepository,
   companyProfileRepository,
+  riderProfileRepository,
   verificationService
 );
 const oauthAuthService = new OAuthAuthService(
@@ -69,7 +72,7 @@ const idVerificationController = createIdVerificationController(
 );
 
 router.post("/individual/register", authController.registerIndividual);
-router.post("/individual/login", authController.login);
+router.post("/login", authController.login);
 
 router.post(
   "/company/register",

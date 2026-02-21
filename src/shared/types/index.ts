@@ -2,6 +2,7 @@ import type {
   CompanyProfile,
   IndividualProfile,
   OtpType,
+  RiderProfile,
 } from "#infrastructure/database/schema/users.js";
 
 export interface ApiResponse<T = unknown> {
@@ -12,7 +13,7 @@ export interface ApiResponse<T = unknown> {
 }
 
 export interface AuthResponse {
-  profile: CompanyProfile | IndividualProfile;
+  profile: CompanyProfile | IndividualProfile | RiderProfile;
   tokens: AuthTokens;
   user_id: string;
 }

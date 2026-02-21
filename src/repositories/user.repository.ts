@@ -39,10 +39,10 @@ export class UserRepository {
     return user;
   }
 
-  async findByNigerianNationalId(nigerianNationalId: string): Promise<undefined | User> {
+  async findByVerificationIdNumber(verificationIdNumber: string): Promise<undefined | User> {
     const [user] = await this.db.select().from(users)
     .leftJoin(individualProfiles, eq(users.id, individualProfiles.userId))
-    .where(eq(individualProfiles.idNumber, nigerianNationalId))
+    .where(eq(individualProfiles.idNumber, verificationIdNumber))
     .limit(1);
     
     return user ? user.users : undefined;
