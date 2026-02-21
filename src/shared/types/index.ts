@@ -52,7 +52,6 @@ export interface RegisterCompanyInput {
   companyPhone?: string;
   logoUrl?: string;
   password: string;
-  rcNumber: string;
   termsAccepted: boolean;
 }
 
@@ -77,3 +76,5 @@ export interface VerifyOtpInput {
   type: OtpType;
   userId: string;
 }
+
+export type IDType = "nigerian_national_id" | "rc_number";

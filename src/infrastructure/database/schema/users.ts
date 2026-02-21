@@ -50,6 +50,7 @@ export const individualProfiles = pgTable("individual_profiles", {
     .notNull()
     .unique()
     .references(() => users.id, { onDelete: "cascade" }),
+  idNumber: text("id_number").unique(),
 });
 
 // Rider Profile - 1:1 with User
@@ -68,6 +69,7 @@ export const riderProfiles = pgTable("rider_profiles", {
     .notNull()
     .unique()
     .references(() => users.id, { onDelete: "cascade" }),
+  idNumber: text("id_number").notNull().unique(),
 });
 
 export const companyProfiles = pgTable("company_profiles", {
@@ -80,7 +82,7 @@ export const companyProfiles = pgTable("company_profiles", {
     .defaultNow(),
   id: uuid("id").primaryKey().defaultRandom(),
   logoUrl: text("logo_url"),
-  rcNumber: text("rc_number").notNull().unique(),
+  rcNumber: text("rc_number").unique(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

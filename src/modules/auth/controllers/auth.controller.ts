@@ -3,7 +3,7 @@ import type { NextFunction, Request, Response } from "express";
 
 import { z } from "zod";
 
-import { uploadLogo } from "#shared/middleware/index.js";
+// import { uploadLogo } from "#shared/middleware/index.js";
 
 import { AuthError, AuthService } from "../services/auth.service.js";
 import {
@@ -121,7 +121,7 @@ export class AuthController {
         });
         return;
       }
-
+      
       next(error);
     }
   };
@@ -143,7 +143,6 @@ export class AuthController {
         companyName: req.body.companyName,
         companyPhone: req.body.companyPhone,
         password: req.body.password,
-        rcNumber: req.body.rcNumber,
         termsAccepted: req.body.termsAccepted === "true" || req.body.termsAccepted === true,
       };
 
@@ -157,7 +156,6 @@ export class AuthController {
         companyPhone: validatedData.companyPhone ?? undefined,
         logoUrl: logoUrl,
         password: validatedData.password,
-        rcNumber: validatedData.rcNumber,
         termsAccepted: validatedData.termsAccepted,
       });
 

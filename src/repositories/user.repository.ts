@@ -1,7 +1,7 @@
 import type { Database } from "#infrastructure/database/index.js";
 import type { NewUser, User } from "#infrastructure/database/schema/users.js";
 
-import { users } from "#infrastructure/database/schema/users.js";
+import { individualProfiles, users } from "#infrastructure/database/schema/users.js";
 import { eq } from "drizzle-orm";
 
 export class UserRepository {
@@ -37,5 +37,14 @@ export class UserRepository {
       .where(eq(users.id, id))
       .returning();
     return user;
+  }
+
+  async findByNigerianNationalId(nigerianNationalId: string): Promise<undefined | User> {
+    const [user] = await this.db.select().from(users)
+    .leftJoin(individualProfiles, eq(users.id, individualProfiles.userId))
+    .where(eq(individualProfiles.idNumber, nigerianNationalId))
+    .limit(1);
+    
+    return user ? user.users : undefined;
   }
 }

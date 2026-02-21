@@ -100,13 +100,6 @@ export const registerCompanySchema = z.object({
       "Password must contain at least one special character"
     ),
 
-  rcNumber: z
-    .string({ error: "RC Number is required" })
-    .regex(
-      /^RC-\d{7}$/,
-      "RC Number must be in the format RC- followed by 7 digits (e.g., RC-1234567)"
-    ),
-
   termsAccepted: z
     .boolean({ error: "Terms acceptance is required" })
     .refine((val) => val, "You must accept the terms and conditions"),

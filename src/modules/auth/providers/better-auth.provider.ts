@@ -42,7 +42,6 @@ export interface OAuthCallbackResult {
   userId: string;
 }
 
-// Helper to parse name into first/last
 function parseName(fullName: string): { firstName: string; lastName: string } {
   const parts = fullName.trim().split(/\s+/);
 

@@ -53,5 +53,17 @@ export class CompanyProfileRepository {
       .returning();
     return profile;
   }
+
+  async updateByUserId(
+    userId: string,
+    data: Partial<NewCompanyProfile>
+  ): Promise<CompanyProfile | undefined> {
+    const [profile] = await this.db
+      .update(companyProfiles)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(companyProfiles.userId, userId))
+      .returning();
+    return profile;
+  }
 }
 
