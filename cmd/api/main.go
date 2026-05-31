@@ -1,34 +1,28 @@
 package main
 
 import (
-	"os";
-	"fmt";
 	"log";
 	"github.com/easebox-25/easebox-backend/util"
+	"github.com/easebox-25/easebox-backend/pkg/config"
 
-	"github.com/joho/godotenv"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	err := godotenv.Load()
-    if err != nil {
-        log.Fatal("Error loading .env file")
-    }
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
+	
 	gin.SetMode(gin.DebugMode)
 	router := gin.Default()
-	router.SetTrustedProxies([]string{os.Getenv("TRUSTED_PROXIES")})
+	router.SetTrustedProxies(cfg.Proxy.TrustedProxies)
 
 	router.GET("/health", func(c *gin.Context) {
-		// c.JSON(200, gin.H{
-		// 	"status": "ok",
-		// })
 		util.OK(c, gin.H{"status": "ok"}, 201)
 	})
 
-	port := os.Getenv("APP_PORT")
-
-	fmt.Println("PORT:", port)
+	port := cfg.PORT
 
 	router.Run(port)
 }
