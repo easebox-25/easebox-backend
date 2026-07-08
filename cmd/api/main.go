@@ -4,6 +4,7 @@ import (
 	"log";
 	"github.com/easebox-25/easebox-backend/util"
 	"github.com/easebox-25/easebox-backend/pkg/config"
+	"github.com/easebox-25/easebox-backend/internal/auth"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,6 +22,10 @@ func main() {
 	router.GET("/health", func(c *gin.Context) {
 		util.OK(c, gin.H{"status": "ok"}, 201)
 	})
+
+	v1 := router.Group("/api/v1")
+
+	auth.Register(v1)
 
 	port := cfg.PORT
 
